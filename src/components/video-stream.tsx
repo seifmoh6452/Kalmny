@@ -20,8 +20,18 @@ export function VideoStream({
   useEffect(() => {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
+      // Ensure audio playback is enabled for remote streams
+      if (!isLocal) {
+        videoRef.current.play().catch(error => {
+          console.error('Error playing stream:', error);
+        });
+      }
     }
-  }, [stream]);
+  }, [stream, isLocal]);
+
+  // Check if audio track exists and is enabled
+  const audioTrack = stream?.getAudioTracks()[0];
+  const isAudioEnabled = audioTrack?.enabled ?? false;
 
   return (
     <motion.div
@@ -38,7 +48,7 @@ export function VideoStream({
         ref={videoRef}
         autoPlay
         playsInline
-        muted={isMuted}
+        muted={isMuted || isLocal} // Always mute local stream to prevent feedback
         className={cn(
           "h-full w-full object-cover",
           isLocal && "scale-x-[-1]" // Mirror local video
@@ -47,7 +57,7 @@ export function VideoStream({
 
       {/* Video indicators */}
       {stream.getVideoTracks()[0]?.enabled === false && (
-        <div className="rounded-full bg-red-500/80 p-1">
+        <div className="absolute top-2 right-2 rounded-full bg-red-500/80 p-1">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -64,8 +74,10 @@ export function VideoStream({
           </svg>
         </div>
       )}
-      {stream.getAudioTracks()[0]?.enabled === false && (
-        <div className="rounded-full bg-red-500/80 p-1">
+      
+      {/* Audio indicator */}
+      {!isAudioEnabled && (
+        <div className="absolute top-2 left-2 rounded-full bg-red-500/80 p-1">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"

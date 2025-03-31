@@ -80,6 +80,7 @@ export default function Dashboard() {
   const [roomName, setRoomName] = useState('');
   const [roomType, setRoomType] = useState<'chat' | 'voice' | 'video'>('chat');
   const [activeRooms, setActiveRooms] = useState<Room[]>([]);
+  const [showSidebar, setShowSidebar] = useState(false);
   const router = useRouter();
 
   const addNotification = useAppStore((state) => state.addNotification);
@@ -404,16 +405,16 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 max-w-7xl mx-auto p-8">
+      <div className="relative z-10 max-w-7xl mx-auto p-4 md:p-8">
         {/* Top Actions */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex justify-between items-center mb-10"
+          className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0 mb-10"
         >
           <div className="flex items-center gap-6">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-white/90 to-white/80 bg-clip-text text-transparent">
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-white/90 to-white/80 bg-clip-text text-transparent">
               Dashboard
             </h1>
             {currentUser && (
@@ -439,10 +440,10 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-4 w-full md:w-auto">
             <button
               onClick={() => setShowAddFriend(true)}
-              className="group px-6 py-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.05] backdrop-blur-xl transition-all duration-300"
+              className="flex-1 md:flex-none group px-6 py-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.05] backdrop-blur-xl transition-all duration-300"
             >
               <span className="text-sm font-medium bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent group-hover:text-white transition-all duration-300">
                 Add Friend
@@ -450,7 +451,7 @@ export default function Dashboard() {
             </button>
             <button
               onClick={() => setShowCreateRoom(true)}
-              className="group px-6 py-3 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#DB2777] hover:opacity-90 transition-all duration-300"
+              className="flex-1 md:flex-none group px-6 py-3 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#DB2777] hover:opacity-90 transition-all duration-300"
             >
               <span className="text-sm font-medium">Create Room</span>
             </button>
@@ -458,9 +459,9 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Dashboard Grid */}
-        <div className="grid lg:grid-cols-[1.5fr,1fr] gap-8">
+        <div className="grid lg:grid-cols-[1.5fr,1fr] gap-4 md:gap-8">
           {/* Left Column */}
-          <div className="space-y-8">
+          <div className="space-y-4 md:space-y-8">
             {/* Friend Requests */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -469,7 +470,7 @@ export default function Dashboard() {
               className="relative group rounded-2xl"
             >
               <div className="absolute -inset-[1px] bg-gradient-to-r from-[#7C3AED] via-[#DB2777] to-[#F59E0B] rounded-2xl opacity-25 group-hover:opacity-40 blur transition-all duration-500" />
-              <div className="relative bg-[#13111C]/90 backdrop-blur-xl p-6 rounded-2xl border border-white/[0.05]">
+              <div className="relative bg-[#13111C]/90 backdrop-blur-xl p-4 md:p-6 rounded-2xl border border-white/[0.05]">
                 <h2 className="text-xl font-bold bg-gradient-to-r from-white via-white/90 to-white/80 bg-clip-text text-transparent mb-6">
                   Friend Requests
                 </h2>
@@ -480,7 +481,7 @@ export default function Dashboard() {
                     friendRequests.map((request) => (
                       <div
                         key={request.id}
-                        className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.05] transition-all duration-300"
+                        className="flex flex-col md:flex-row items-start md:items-center justify-between p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.05] transition-all duration-300 gap-4 md:gap-0"
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#DB2777] p-[1px]">
@@ -495,7 +496,7 @@ export default function Dashboard() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 w-full md:w-auto">
                           <button
                             onClick={async () => {
                               try {
@@ -528,7 +529,7 @@ export default function Dashboard() {
                                 addNotification({ message: 'Error accepting friend request', type: 'error' });
                               }
                             }}
-                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#DB2777] hover:opacity-90 text-sm font-medium transition-all duration-300"
+                            className="flex-1 md:flex-none px-4 py-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#DB2777] hover:opacity-90 text-sm font-medium transition-all duration-300"
                           >
                             Accept
                           </button>
@@ -543,7 +544,7 @@ export default function Dashboard() {
                                 addNotification({ message: 'Error rejecting friend request', type: 'error' });
                               }
                             }}
-                            className="px-4 py-2 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.05] text-sm font-medium transition-all duration-300"
+                            className="flex-1 md:flex-none px-4 py-2 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.05] text-sm font-medium transition-all duration-300"
                           >
                             Reject
                           </button>
@@ -578,7 +579,7 @@ export default function Dashboard() {
                       key={room.id}
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="group relative overflow-hidden rounded-2xl bg-white/[0.02] border border-white/[0.05] p-6 hover:bg-white/[0.04] transition-all duration-300"
+                      className="group relative overflow-hidden rounded-2xl bg-white/[0.02] border border-white/[0.05] p-4 md:p-6 hover:bg-white/[0.04] transition-all duration-300"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-[#7C3AED]/10 via-[#DB2777]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       
@@ -598,20 +599,31 @@ export default function Dashboard() {
 
                         <div className="flex items-center gap-2 text-sm text-white/60">
                           <div className="flex -space-x-2">
-                            {room.participants.slice(0, 3).map((participant: any, index: number) => (
-                              <div
-                                key={participant.id}
-                                className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#DB2777] flex items-center justify-center ring-2 ring-black"
-                              >
-                                <span className="text-xs font-medium text-white">
-                                  {participant.username[0].toUpperCase()}
+                            {Array.isArray(room.participants) ? (
+                              room.participants.slice(0, 3).map((participant: any, index: number) => (
+                                <div
+                                  key={participant.id}
+                                  className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#DB2777] flex items-center justify-center ring-2 ring-black"
+                                >
+                                  <span className="text-white text-sm font-medium">
+                                    {participant.name?.[0] || '?'}
+                                  </span>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#DB2777] flex items-center justify-center ring-2 ring-black">
+                                <span className="text-white text-sm font-medium">?</span>
+                              </div>
+                            )}
+                            {Array.isArray(room.participants) && room.participants.length > 3 && (
+                              <div className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center ring-2 ring-black">
+                                <span className="text-white text-sm font-medium">
+                                  +{room.participants.length - 3}
                                 </span>
                               </div>
-                            ))}
+                            )}
                           </div>
-                          <span>
-                            {room.participants.length} participant{room.participants.length !== 1 ? 's' : ''}
-                          </span>
+                          <span>{Array.isArray(room.participants) ? room.participants.length : 0} participants</span>
                         </div>
 
                         <button
@@ -625,7 +637,7 @@ export default function Dashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl bg-white/[0.02] border border-white/[0.05] p-8 text-center">
+                <div className="rounded-2xl bg-white/[0.02] border border-white/[0.05] p-6 md:p-8 text-center">
                   <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-white/[0.02]">
                     <BsCameraVideo className="h-6 w-6 text-white/40" />
                   </div>
@@ -653,7 +665,7 @@ export default function Dashboard() {
             className="relative group rounded-2xl"
           >
             <div className="absolute -inset-[1px] bg-gradient-to-r from-[#7C3AED] via-[#DB2777] to-[#F59E0B] rounded-2xl opacity-25 group-hover:opacity-40 blur transition-all duration-500" />
-            <div className="relative bg-[#13111C]/90 backdrop-blur-xl p-6 rounded-2xl border border-white/[0.05] h-[calc(100vh-10rem)]">
+            <div className="relative bg-[#13111C]/90 backdrop-blur-xl p-4 md:p-6 rounded-2xl border border-white/[0.05] h-[calc(100vh-10rem)]">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold bg-gradient-to-r from-white via-white/90 to-white/80 bg-clip-text text-transparent">
                   Friends

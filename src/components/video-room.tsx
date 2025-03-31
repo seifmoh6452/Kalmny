@@ -98,12 +98,16 @@ export function VideoRoom({ roomId, onLeave }: VideoRoomProps) {
       console.log("Remote streams:", remoteStreams);
       console.log("Peers:", peers);
       
-      activeRoom.participants.forEach((participant) => {
-        if (participant.id !== currentUser?.id) {
-          console.log("Attempting to connect to peer:", participant.id);
-          connectToPeer(participant.id);
-        }
-      });
+      if (Array.isArray(activeRoom.participants)) {
+        activeRoom.participants.forEach((participant) => {
+          if (participant.id !== currentUser?.id) {
+            console.log("Attempting to connect to peer:", participant.id);
+            connectToPeer(participant.id);
+          }
+        });
+      } else {
+        console.log("Participants is not an array:", activeRoom.participants);
+      }
     }
   }, [activeRoom?.participants, currentUser?.id, connectToPeer]);
 
@@ -116,6 +120,16 @@ export function VideoRoom({ roomId, onLeave }: VideoRoomProps) {
           if (snapshot.exists()) {
             const roomData = snapshot.data() as Room;
             console.log("Room data updated:", roomData);
+            // Ensure participants is always an array and has the correct structure
+            if (!Array.isArray(roomData.participants)) {
+              roomData.participants = [];
+            }
+            // Ensure each participant has the required fields
+            roomData.participants = roomData.participants.map(participant => ({
+              id: participant.id || '',
+              username: participant.username || 'Anonymous',
+              role: participant.role || 'participant'
+            }));
             setActiveRoom(roomData);
           }
         });
@@ -227,11 +241,11 @@ export function VideoRoom({ roomId, onLeave }: VideoRoomProps) {
   };
 
   return (
-    <div className="relative flex h-full bg-[#0A0A0F] overflow-hidden">
+    <div className="relative flex h-screen w-full bg-[#0A0A0F] overflow-hidden">
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${showParticipants || showChat ? 'mr-96' : ''}`}>
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${showParticipants || showChat ? 'md:mr-96' : ''}`}>
         {/* Top Controls */}
-        <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
+        <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -259,18 +273,18 @@ export function VideoRoom({ roomId, onLeave }: VideoRoomProps) {
         </div>
 
         {/* Video Grid */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-2 md:p-6">
           <div 
             className={cn(
-              "grid h-full gap-4",
+              "grid h-full gap-2 md:gap-4",
               gridLayout === 'grid' ? [
                 totalParticipants <= 1 && "place-items-center",
-                totalParticipants === 2 && "grid-cols-2",
-                totalParticipants === 3 && "grid-cols-2 grid-rows-2",
-                totalParticipants === 4 && "grid-cols-2 grid-rows-2",
-                totalParticipants > 4 && "grid-cols-3 grid-rows-2"
+                totalParticipants === 2 && "grid-cols-1 md:grid-cols-2",
+                totalParticipants === 3 && "grid-cols-1 md:grid-cols-2",
+                totalParticipants === 4 && "grid-cols-1 md:grid-cols-2",
+                totalParticipants > 4 && "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
               ].filter(Boolean).join(" ") :
-              "grid-cols-[1fr_300px]"
+              "grid-cols-1 md:grid-cols-[1fr_300px]"
             )}
           >
             {/* Local Video */}
@@ -279,7 +293,7 @@ export function VideoRoom({ roomId, onLeave }: VideoRoomProps) {
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className={cn(
-                  "relative rounded-2xl overflow-hidden bg-slate-900/50 backdrop-blur-sm border border-white/10",
+                  "relative rounded-2xl overflow-hidden bg-slate-900/50 backdrop-blur-sm border border-white/10 min-h-[60vh] md:min-h-0",
                   gridLayout === 'grid' ? (
                     totalParticipants === 1 ? 'w-full max-w-4xl aspect-video' : 'w-full h-full'
                   ) : (
@@ -291,7 +305,7 @@ export function VideoRoom({ roomId, onLeave }: VideoRoomProps) {
             stream={localStream}
             isMuted
             isLocal
-                  className="rounded-2xl"
+                  className="rounded-2xl h-full w-full object-cover"
                 />
                 {!isVideoEnabled && (
                   <div className="absolute inset-0 flex items-center justify-center bg-slate-900/90 backdrop-blur-sm">
@@ -306,52 +320,47 @@ export function VideoRoom({ roomId, onLeave }: VideoRoomProps) {
             )}
 
             {/* Remote Videos */}
-            {Object.entries(remoteStreams).map(([peerId, stream], index) => {
-              console.log("Rendering remote stream for peer:", peerId);
-              const participant = activeRoom?.participants.find(p => p.id === peerId);
-              
-              return (
-                <motion.div
-                  key={peerId}
-                  initial={{ scale: 0.95, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: index * 0.1 }}
-                  className={cn(
-                    "relative rounded-2xl overflow-hidden bg-slate-900/50 backdrop-blur-sm border border-white/10 w-full h-full min-h-[240px]",
-                    gridLayout === 'spotlight' && index > 0 && "col-start-2"
-                  )}
-                >
+            {Object.entries(remoteStreams).map(([peerId, stream], index) => (
+              <motion.div
+                key={peerId}
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className={cn(
+                  "relative rounded-2xl overflow-hidden bg-slate-900/50 backdrop-blur-sm border border-white/10 w-full min-h-[60vh] md:min-h-[240px]",
+                  gridLayout === 'spotlight' && index > 0 && "col-start-2"
+                )}
+              >
           <VideoStream
             stream={stream}
-                    className="rounded-2xl"
-                  />
-                  {participant && (
-                    <div className="absolute bottom-4 left-4 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white text-sm">
-                      {participant.username}
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
+                  className="rounded-2xl h-full w-full object-cover"
+                />
+                {activeRoom?.participants.find(p => p.id === peerId) && (
+                  <div className="absolute bottom-4 left-4 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white text-sm">
+                    {activeRoom.participants.find(p => p.id === peerId)?.username}
+                  </div>
+                )}
+              </motion.div>
+            ))}
           </div>
       </div>
 
         {/* Bottom Controls */}
-        <div className="relative px-6 py-6 z-50">
+        <div className="relative px-2 py-4 md:px-6 md:py-6 z-50">
           <div className="flex items-center justify-center">
       <motion.div
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-              className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/10"
+              className="flex items-center gap-2 md:gap-3 px-4 md:px-6 py-2 md:py-3 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/10"
             >
               {/* Left Controls */}
-              <div className="flex items-center gap-2 pr-4 border-r border-white/10">
+              <div className="flex items-center gap-2 pr-2 md:pr-4 border-r border-white/10">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
           onClick={handleToggleAudio}
                   className={cn(
-                    "p-3 rounded-xl transition-all duration-200",
+                    "p-2 md:p-3 rounded-xl transition-all duration-200",
             isAudioEnabled
                       ? "bg-white/10 hover:bg-white/20 text-white"
                       : "bg-red-500/20 text-red-500 hover:bg-red-500/30"
@@ -369,7 +378,7 @@ export function VideoRoom({ roomId, onLeave }: VideoRoomProps) {
                   whileTap={{ scale: 0.95 }}
           onClick={handleToggleVideo}
                   className={cn(
-                    "p-3 rounded-xl transition-all duration-200",
+                    "p-2 md:p-3 rounded-xl transition-all duration-200",
             isVideoEnabled
                       ? "bg-white/10 hover:bg-white/20 text-white"
                       : "bg-red-500/20 text-red-500 hover:bg-red-500/30"
@@ -390,7 +399,7 @@ export function VideoRoom({ roomId, onLeave }: VideoRoomProps) {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowParticipants(!showParticipants)}
                   className={cn(
-                    "p-3 rounded-xl transition-all duration-200",
+                    "p-2 md:p-3 rounded-xl transition-all duration-200",
                     showParticipants
                       ? "bg-indigo-500 text-white"
                       : "bg-white/10 hover:bg-white/20 text-white"
@@ -404,7 +413,7 @@ export function VideoRoom({ roomId, onLeave }: VideoRoomProps) {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowChat(!showChat)}
                   className={cn(
-                    "p-3 rounded-xl transition-all duration-200",
+                    "p-2 md:p-3 rounded-xl transition-all duration-200",
                     showChat
                       ? "bg-indigo-500 text-white"
                       : "bg-white/10 hover:bg-white/20 text-white"
@@ -418,7 +427,7 @@ export function VideoRoom({ roomId, onLeave }: VideoRoomProps) {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setIsRecording(!isRecording)}
                   className={cn(
-                    "p-3 rounded-xl transition-all duration-200",
+                    "p-2 md:p-3 rounded-xl transition-all duration-200",
                     isRecording
                       ? "bg-red-500 text-white"
                       : "bg-white/10 hover:bg-white/20 text-white"
@@ -430,20 +439,20 @@ export function VideoRoom({ roomId, onLeave }: VideoRoomProps) {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="p-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all duration-200"
+                  className="p-2 md:p-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all duration-200"
                 >
                   <BsShareFill className="w-5 h-5" />
                 </motion.button>
               </div>
 
               {/* Right Controls */}
-              <div className="flex items-center gap-2 pl-4 border-l border-white/10">
+              <div className="flex items-center gap-2 pl-2 md:pl-4 border-l border-white/10">
                 {currentUser?.id === activeRoom?.createdBy && (
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={deactivateRoom}
-                    className="p-3 rounded-xl bg-red-500/20 text-red-500 hover:bg-red-500/30 transition-all duration-200"
+                    className="p-2 md:p-3 rounded-xl bg-red-500/20 text-red-500 hover:bg-red-500/30 transition-all duration-200"
                     title="End Room"
                   >
                     <BsDoorOpenFill className="w-5 h-5" />
@@ -453,7 +462,7 @@ export function VideoRoom({ roomId, onLeave }: VideoRoomProps) {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
           onClick={onLeave}
-                  className="p-3 rounded-xl bg-red-500 hover:bg-red-600 text-white transition-all duration-200"
+                  className="p-2 md:p-3 rounded-xl bg-red-500 hover:bg-red-600 text-white transition-all duration-200"
                 >
                   <IoCallOutline className="w-5 h-5 rotate-[135deg]" />
                 </motion.button>
@@ -470,48 +479,54 @@ export function VideoRoom({ roomId, onLeave }: VideoRoomProps) {
             initial={{ x: '100%', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
-            className="absolute right-0 top-0 bottom-0 w-96 bg-slate-900/70 backdrop-blur-xl border-l border-white/10"
+            className="fixed md:absolute right-0 top-0 bottom-0 w-96 bg-slate-900/70 backdrop-blur-xl border-l border-white/10 z-50"
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-medium text-white">Participants</h2>
                 <span className="px-2.5 py-1 rounded-lg bg-white/10 text-sm font-medium text-white">
-                  {totalParticipants}
+                  {Array.isArray(activeRoom?.participants) ? activeRoom.participants.length : 0}
                 </span>
               </div>
               <div className="space-y-3">
-                {activeRoom?.participants.map((participant) => (
-                  <motion.div
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    key={participant.id}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                      <span className="text-base font-medium text-white">
-                        {participant.username[0].toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">
-                        {participant.username}
-                        {participant.id === currentUser?.id && " (You)"}
-                      </p>
+                {Array.isArray(activeRoom?.participants) && activeRoom.participants.length > 0 ? (
+                  activeRoom.participants.map((participant) => (
+                    <motion.div
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      key={participant.id}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                        <span className="text-base font-medium text-white">
+                          {participant.username?.[0]?.toUpperCase() || '?'}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white truncate">
+                          {participant.username || 'Anonymous'}
+                          {participant.id === currentUser?.id && " (You)"}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <p className="text-xs text-white/60">Online</p>
+                        </div>
+                      </div>
                       <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <p className="text-xs text-white/60">Online</p>
+                        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                          <BsMicFill className="w-4 h-4 text-white/60" />
+                        </div>
+                        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                          <BsCameraVideoFill className="w-4 h-4 text-white/60" />
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                        <BsMicFill className="w-4 h-4 text-white/60" />
-                      </div>
-                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                        <BsCameraVideoFill className="w-4 h-4 text-white/60" />
-                      </div>
-                    </div>
-      </motion.div>
-                ))}
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="text-center text-white/60 py-4">
+                    No participants available
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
@@ -522,7 +537,7 @@ export function VideoRoom({ roomId, onLeave }: VideoRoomProps) {
             initial={{ x: '100%', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
-            className="absolute right-0 top-0 bottom-0 w-96 bg-slate-900/70 backdrop-blur-xl border-l border-white/10"
+            className="fixed md:absolute right-0 top-0 bottom-0 w-96 bg-slate-900/70 backdrop-blur-xl border-l border-white/10 z-50"
           >
             <div className="flex flex-col h-full">
               <div className="p-6 border-b border-white/10">

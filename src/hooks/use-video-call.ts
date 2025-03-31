@@ -35,12 +35,27 @@ export function useVideoCall({
       try {
         console.log('Initializing peer connection...');
         
-        // Initialize local media stream
+        // Initialize local media stream with explicit audio constraints
         console.log('Requesting media stream...');
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
-          audio: true,
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
         });
+        
+        // Verify audio track is present and enabled
+        const audioTrack = stream.getAudioTracks()[0];
+        if (audioTrack) {
+          console.log('Audio track initialized:', audioTrack.label);
+          audioTrack.enabled = true;
+        } else {
+          console.error('No audio track found in media stream');
+          throw new Error('Failed to initialize audio');
+        }
+
         console.log('Media stream obtained:', stream.id);
         setLocalStream(stream);
 
@@ -227,9 +242,15 @@ export function useVideoCall({
     if (localStream) {
       const audioTrack = localStream.getAudioTracks()[0];
       if (audioTrack) {
+        console.log('Toggling audio track:', audioTrack.label);
         audioTrack.enabled = !audioTrack.enabled;
+        console.log('Audio track enabled:', audioTrack.enabled);
         return audioTrack.enabled;
+      } else {
+        console.error('No audio track found');
       }
+    } else {
+      console.error('No local stream available');
     }
     return false;
   };
