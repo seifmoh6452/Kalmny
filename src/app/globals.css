@@ -1,26 +1,172 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Modern Vibrant Color Palette */
+  --primary: #7C3AED;
+  --primary-light: #9F67FF;
+  --primary-dark: #5B21B6;
+  --secondary: #06B6D4;
+  --secondary-light: #22D3EE;
+  --secondary-dark: #0891B2;
+  --accent: #F59E0B;
+  --background: #0F172A;
+  --surface: rgba(30, 41, 59, 0.8);
+  --surface-light: rgba(51, 65, 85, 0.9);
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --success: #10B981;
+  --error: #EF4444;
+  --warning: #F59E0B;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  body {
+    @apply bg-[var(--background)] text-[var(--text-primary)] relative min-h-screen;
+    background-image: 
+      radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.15) 0%, transparent 50%);
+    font-family: 'Inter', sans-serif;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* Modern Scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-[var(--surface)];
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-[var(--primary)] rounded-full;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Modern Container */
+  .party-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6;
+  }
+
+  /* Modern Card */
+  .party-card {
+    @apply bg-[var(--surface)] backdrop-blur-xl rounded-2xl p-6
+           border border-white/10 shadow-lg
+           transition-all duration-300 hover:shadow-2xl
+           hover:border-white/20 hover:scale-[1.02];
+  }
+
+  /* Modern Button */
+  .party-button {
+    @apply px-6 py-3 rounded-xl font-medium
+           bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]
+           hover:from-[var(--primary-light)] hover:to-[var(--secondary-light)]
+           text-white shadow-lg hover:shadow-xl
+           transition-all duration-300 hover:-translate-y-0.5
+           active:scale-95 disabled:opacity-50;
+  }
+
+  /* Secondary Button */
+  .party-button-secondary {
+    @apply px-6 py-3 rounded-xl font-medium
+           bg-[var(--surface)] border border-white/10
+           hover:bg-[var(--surface-light)] hover:border-white/20
+           text-white transition-all duration-300
+           hover:-translate-y-0.5 active:scale-95;
+  }
+
+  /* Modern Input */
+  .party-input {
+    @apply w-full px-4 py-3 rounded-xl
+           bg-[var(--surface)] border border-white/10
+           text-[var(--text-primary)] placeholder-[var(--text-secondary)]
+           focus:outline-none focus:ring-2 focus:ring-[var(--primary)]
+           transition-all duration-300;
+  }
+
+  /* Modern Header */
+  .party-header {
+    @apply fixed top-0 left-0 right-0 z-50
+           bg-[var(--surface)] backdrop-blur-xl
+           border-b border-white/10 py-4;
+  }
+
+  /* Room Card */
+  .party-room {
+    @apply party-card flex items-center gap-4;
+  }
+
+  /* Avatar */
+  .party-avatar {
+    @apply w-12 h-12 rounded-full
+           bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]
+           p-0.5;
+  }
+
+  .party-avatar-inner {
+    @apply w-full h-full rounded-full bg-[var(--background)]
+           flex items-center justify-center text-white font-bold;
+  }
+
+  /* Badge */
+  .party-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm
+           bg-[var(--primary)] bg-opacity-20 text-[var(--primary-light)]
+           border border-[var(--primary)] border-opacity-20;
+  }
+
+  /* Friend List Item */
+  .party-friend {
+    @apply flex items-center gap-3 p-3 rounded-xl
+           hover:bg-[var(--surface-light)]
+           transition-all duration-200;
+  }
+
+  /* Status Indicator */
+  .party-status {
+    @apply w-3 h-3 rounded-full;
+  }
+  
+  .party-status-online {
+    @apply bg-[var(--success)];
+  }
+
+  /* Animations */
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  /* Modal */
+  .party-modal {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+  }
+
+  .party-modal-overlay {
+    @apply absolute inset-0 bg-black/60 backdrop-blur-sm;
+  }
+
+  .party-modal-content {
+    @apply relative bg-[var(--surface)] rounded-2xl p-6
+           border border-white/10 shadow-2xl
+           w-full max-w-md transform
+           transition-all duration-300;
+  }
 }
